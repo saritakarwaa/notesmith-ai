@@ -4,13 +4,24 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 const NotesmithAI = () => {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [textInput, setTextInput] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogContent, setDialogContent] = useState('');
+  const [dialogTitle, setDialogTitle] = useState('');
   const { toast } = useToast();
+  const baseUrl="http://localhost:3000/api"
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -89,13 +100,23 @@ const NotesmithAI = () => {
     if (!hasContent) return;
     
     setIsProcessing(true);
+    const formData=new FormData();
+    if(uploadedFile) formData.append('file',uploadedFile)
+    else formData.append('text',textInput)
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      toast({
-        title: "Summary generated!",
-        description: "Your content has been summarized successfully."
-      });
+      const response=await fetch(`${baseUrl}/summarize`,{
+        method:'POST',
+        body:formData,
+      })
+      const data=await response.json();
+      if (response.ok && data.summary) {
+        setDialogTitle('Summary');
+        setDialogContent(data.summary);
+        setDialogOpen(true);
+      } else {
+        toast({ title: "Summarization Failed", description: data.message || "No summary returned." });
+      }
+
     } catch (error) {
       toast({
         title: "Error generating summary",
@@ -111,13 +132,23 @@ const NotesmithAI = () => {
     if (!hasContent) return;
     
     setIsProcessing(true);
+    const formData=new FormData()
+    if(uploadedFile) formData.append('file',uploadedFile)
+    else formData.append('text',textInput)
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      toast({
-        title: "Quiz generated!",
-        description: "Your interactive quiz has been created successfully."
-      });
+      const response=await fetch(`${baseUrl}/generate-quiz`,{
+        method:'POST',
+        body:formData,
+      })
+      const data=await response.json()
+      if(response.ok && data.quiz){
+        setDialogTitle('Generated Quiz')
+        setDialogContent(data.quiz)
+        setDialogOpen(true)
+      }
+      else {
+        toast({ title: "Quiz Generation Failed", description: data.message || "No quiz returned." });
+      }
     } catch (error) {
       toast({
         title: "Error generating quiz",
@@ -246,7 +277,20 @@ const NotesmithAI = () => {
           </div>
         )}
       </div>
-    </div>
+
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{dialogTitle}</DialogTitle>
+            <DialogDescription>
+              <pre className="whitespace-pre-wrap text-sm mt-2 text-foreground">
+                {dialogContent}
+              </pre>
+            </DialogDescription>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
+      </div>
   );
 };
 
