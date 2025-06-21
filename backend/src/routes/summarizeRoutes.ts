@@ -5,6 +5,6 @@ import { summarizeText } from "../controllers/summarizeController";
 const upload = multer();
 const router = express.Router();
 
-router.post("/", upload.single("file"), summarizeText);
+router.post("/", upload.single("file"), summarizeText as express.RequestHandler);
 
 export default router;

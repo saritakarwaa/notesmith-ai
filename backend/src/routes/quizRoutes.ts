@@ -5,6 +5,6 @@ import { generateQuiz } from "../controllers/quizController";
 const upload = multer();
 const router = express.Router();
 
-router.post("/", upload.single("file"), generateQuiz);
+router.post("/", upload.single("file"), generateQuiz as express.RequestHandler);
 
 export default router;
