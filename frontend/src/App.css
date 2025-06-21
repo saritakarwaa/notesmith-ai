@@ -1,7 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-@custom-variant dark (&:is(.dark *));
+/* /* @custom-variant dark (&:is(.dark *)); */
 
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
@@ -114,6 +114,69 @@
   * {
     @apply border-border outline-ring/50;
   }
+  body {
+    @apply bg-background text-foreground;
+  }
+} */
+
+
+  :root {
+    /* Catppuccin color palette */
+    --ctp-rosewater: #f5e0dc;
+    --ctp-flamingo: #f2cdcd;
+    --ctp-mauve: #cba6f7;
+    --ctp-blue: #89b4fa;
+    --ctp-lavender: #b4befe;
+    --ctp-text: #cdd6f4;
+    --ctp-base: #1e1e2e;
+    --ctp-surface0: #313244;
+    --ctp-surface1: #45475a;
+    --ctp-overlay0: #6c7086;
+
+    /* Semantic design tokens */
+    --background: 30 23% 9%;              /* ctp-base */
+    --foreground: 226 64% 88%;            /* ctp-text */
+
+    --card: 237 16% 19%;                  /* ctp-surface0 */
+    --card-foreground: 226 64% 88%;       /* ctp-text */
+
+    --popover: 237 16% 19%;
+    --popover-foreground: 226 64% 88%;
+
+    --primary: 267 84% 81%;               /* ctp-mauve */
+    --primary-foreground: 30 23% 9%;      /* ctp-base */
+
+    --secondary: 237 16% 23%;
+    --secondary-foreground: 226 64% 88%;
+
+    --muted: 237 16% 23%;
+    --muted-foreground: 233 12% 53%;
+
+    --accent: 217 92% 76%;                /* ctp-blue */
+    --accent-foreground: 30 23% 9%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 226 64% 88%;
+
+    --border: 237 16% 23%;
+    --input: 237 16% 23%;
+    --ring: 267 84% 81%;
+
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    /* Optional: Dark mode override */
+    --background: 30 23% 9%;
+    --foreground: 226 64% 88%;
+  }
+
+  
+@layer base {
+* {
+    @apply border-border outline-ring/50;
+  }
+
   body {
     @apply bg-background text-foreground;
   }
