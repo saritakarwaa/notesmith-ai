@@ -142,7 +142,7 @@ const NotesmithAI = () => {
       })
       const data=await response.json()
       if(response.ok && data.quiz){
-        setDialogTitle('Generated Quiz')
+        setDialogTitle('Generated Quiz')   
         setDialogContent(data.quiz)
         setDialogOpen(true)
       }
