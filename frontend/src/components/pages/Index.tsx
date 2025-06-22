@@ -11,87 +11,74 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { useDispatch } from 'react-redux';
+import { setQuiz, setSummary } from '@/features/notesSlice';
 
 const NotesmithAI = () => {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [textInput, setTextInput] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [dialogContent, setDialogContent] = useState('');
-  const [dialogTitle, setDialogTitle] = useState('');
+  const [dialogData, setDialogData] = useState<{
+          open: boolean;title: string;content: string;}>({
+          open: false,title: '',content: '',});
   const { toast } = useToast();
+  const dispatch=useDispatch()
   const baseUrl="http://localhost:3000/api"
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      // Check file type and size
-      const allowedTypes = ['text/plain', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-      const maxSize = 10 * 1024 * 1024; // 10MB
+  const validateAndHandleFile = (file: File): boolean => {
+      const allowedTypes = [
+        'text/plain',
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      ];
+      const maxSize = 10 * 1024 * 1024;
 
       if (!allowedTypes.includes(file.type) && !file.name.match(/\.(txt|pdf|doc|docx)$/i)) {
         toast({
           title: "Unsupported file type",
           description: "Please upload a TXT, PDF, DOC, or DOCX file.",
-        
         });
-        return;
+        return false;
       }
 
       if (file.size > maxSize) {
         toast({
           title: "File too large",
           description: "Please upload a file smaller than 10MB.",
-          
         });
-        return;
+        return false;
       }
 
       setUploadedFile(file);
       toast({
         title: "File uploaded successfully",
-        description: `${file.name} is ready for processing.`
+        description: `${file.name} is ready for processing.`,
       });
-    }
+
+      return true;
+    };
+
+      const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if(file) validateAndHandleFile(file)
+      };
+
+      const handleDragOver = (event: React.DragEvent) => {
+        event.preventDefault();
+      };
+
+      const handleDrop = (event: React.DragEvent) => {
+        event.preventDefault();
+        const file = event.dataTransfer.files[0];
+        if(file) validateAndHandleFile(file)
   };
-
-  const handleDragOver = (event: React.DragEvent) => {
-    event.preventDefault();
-  };
-
-  const handleDrop = (event: React.DragEvent) => {
-    event.preventDefault();
-    const file = event.dataTransfer.files[0];
-    if (file) {
-      // Handle file validation and setting directly
-      const allowedTypes = ['text/plain', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-      const maxSize = 10 * 1024 * 1024; // 10MB
-
-      if (!allowedTypes.includes(file.type) && !file.name.match(/\.(txt|pdf|doc|docx)$/i)) {
-        toast({
-          title: "Unsupported file type",
-          description: "Please upload a TXT, PDF, DOC, or DOCX file.",
-          
-        });
-        return;
-      }
-
-      if (file.size > maxSize) {
-        toast({
-          title: "File too large",
-          description: "Please upload a file smaller than 10MB.",
-         
-        });
-        return;
-      }
-
-      setUploadedFile(file);
-      toast({
-        title: "File uploaded successfully",
-        description: `${file.name} is ready for processing.`
-      });
-    }
+  const buildFormData = () => {
+      const formData = new FormData();
+      if (uploadedFile) formData.append("file", uploadedFile);
+      else formData.append("text", textInput);
+      return formData;
   };
 
   const hasContent = uploadedFile || textInput.trim().length > 0;
@@ -100,9 +87,7 @@ const NotesmithAI = () => {
     if (!hasContent) return;
     
     setIsProcessing(true);
-    const formData=new FormData();
-    if(uploadedFile) formData.append('file',uploadedFile)
-    else formData.append('text',textInput)
+    const formData=buildFormData()
     try {
       const response=await fetch(`${baseUrl}/summarize`,{
         method:'POST',
@@ -110,10 +95,14 @@ const NotesmithAI = () => {
       })
       const data=await response.json();
       if (response.ok && data.summary) {
-        setDialogTitle('Summary');
-        setDialogContent(data.summary);
-        setDialogOpen(true);
+        dispatch(setSummary(data.summary))
+        setDialogData({
+          open: true,
+          title: 'Summary',
+          content: data.summary,
+        });
       } else {
+        setDialogData({ open: true, title: "Error", content: data.message });
         toast({ title: "Summarization Failed", description: data.message || "No summary returned." });
       }
 
@@ -132,9 +121,7 @@ const NotesmithAI = () => {
     if (!hasContent) return;
     
     setIsProcessing(true);
-    const formData=new FormData()
-    if(uploadedFile) formData.append('file',uploadedFile)
-    else formData.append('text',textInput)
+    const formData=buildFormData()
     try {
       const response=await fetch(`${baseUrl}/generate-quiz`,{
         method:'POST',
@@ -142,11 +129,15 @@ const NotesmithAI = () => {
       })
       const data=await response.json()
       if(response.ok && data.quiz){
-        setDialogTitle('Generated Quiz')   
-        setDialogContent(data.quiz)
-        setDialogOpen(true)
+        dispatch(setQuiz(data.quiz))
+        setDialogData({
+          open: true,
+          title: 'Quiz',
+          content: data.quiz,
+        });
       }
       else {
+        setDialogData({ open: true, title: "Error", content: data.message });
         toast({ title: "Quiz Generation Failed", description: data.message || "No quiz returned." });
       }
     } catch (error) {
@@ -227,7 +218,7 @@ const NotesmithAI = () => {
             <CardHeader>
               <CardTitle className="text-card-foreground flex items-center gap-2">
                 <FileText className="h-5 w-5 text-accent" />
-                Write Text
+                Or Write Text
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -278,13 +269,13 @@ const NotesmithAI = () => {
         )}
       </div>
 
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <Dialog open={dialogData.open} onOpenChange={(open)=>setDialogData(prev=>({...prev,open}))}>
         <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{dialogTitle}</DialogTitle>
+            <DialogTitle>{dialogData.title}</DialogTitle>
             <DialogDescription>
               <pre className="whitespace-pre-wrap text-sm mt-2 text-foreground">
-                {dialogContent}
+                {dialogData.content}
               </pre>
             </DialogDescription>
           </DialogHeader>
