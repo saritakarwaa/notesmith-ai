@@ -17,7 +17,8 @@ import { setQuiz, setSummary } from '@/features/notesSlice';
 const NotesmithAI = () => {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [textInput, setTextInput] = useState('');
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [isSummarizing, setIsSummarizing] = useState(false);
+  const [isGeneratingQuiz, setIsGeneratingQuiz] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [dialogData, setDialogData] = useState<{
           open: boolean;title: string;content: string;}>({
@@ -73,7 +74,7 @@ const NotesmithAI = () => {
         event.preventDefault();
         const file = event.dataTransfer.files[0];
         if(file) validateAndHandleFile(file)
-  };
+      };
   const buildFormData = () => {
       const formData = new FormData();
       if (uploadedFile) formData.append("file", uploadedFile);
@@ -86,7 +87,7 @@ const NotesmithAI = () => {
   const handleSummarize = async () => {
     if (!hasContent) return;
     
-    setIsProcessing(true);
+    setIsSummarizing(true)
     const formData=buildFormData()
     try {
       const response=await fetch(`${baseUrl}/summarize`,{
@@ -113,14 +114,14 @@ const NotesmithAI = () => {
        
       });
     } finally {
-      setIsProcessing(false);
+      setIsSummarizing(false);
     }
   };
 
   const handleGenerateQuiz = async () => {
     if (!hasContent) return;
     
-    setIsProcessing(true);
+    setIsGeneratingQuiz(true);
     const formData=buildFormData()
     try {
       const response=await fetch(`${baseUrl}/generate-quiz`,{
@@ -147,141 +148,129 @@ const NotesmithAI = () => {
        
       });
     } finally {
-      setIsProcessing(false);
+      setIsGeneratingQuiz(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-background p-2 sm:p-4 flex flex-col">
-      {/* Header */}
-      <div className="text-center mb-6 md:mb-8">
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-2 flex items-center justify-center gap-2 md:gap-3">
-          <FileText className="h-6 w-6 md:h-8 md:w-8 text-primary" />
-          Notesmith AI
-        </h1>
-        <p className="text-muted-foreground text-sm sm:text-base md:text-lg px-4">
-          Transform your content with AI-powered summarization and quiz generation
-        </p>
-      </div>
+    <div className="min-h-screen w-full py-10 px-4 sm:px-6 md:px-8 lg:px-10 flex flex-col items-center bg-[#1e1e2e] text-[#cdd6f4]">
+  {/* Header */}
+  <div className="text-center mb-8">
+    <h1 className="text-4xl font-bold flex items-center justify-center gap-2 text-[#cba6f7]">
+      <FileText className="h-7 w-7" />
+      Notesmith AI
+    </h1>
+    <p className="mt-2 text-base text-[#f2cdcd]">
+      Transform your content with AI-powered summarization and quiz generation
+    </p>
+  </div>
 
-      {/* Main Content Area */}
-      <div className="flex-1 max-w-6xl mx-auto w-full">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-6 md:mb-8">
-          {/* File Upload Section */}
-          <Card className="bg-card border-border">
-            <CardHeader>
-              <CardTitle className="text-card-foreground flex items-center gap-2">
-                <Upload className="h-5 w-5 text-accent" />
-                Upload Document
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div
-                className="border-2 border-dashed border-border rounded-lg p-4 sm:p-6 md:p-8 text-center cursor-pointer hover:border-accent transition-colors h-40 sm:h-44 md:h-48 flex flex-col items-center justify-center"
-                onDragOver={handleDragOver}
-                onDrop={handleDrop}
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".txt,.pdf,.doc,.docx"
-                  onChange={handleFileUpload}
-                  className="hidden"
-                />
-                {uploadedFile ? (
-                  <div className="text-center">
-                    <FileText className="h-12 w-12 text-primary mx-auto mb-3" />
-                    <p className="text-foreground font-medium">{uploadedFile.name}</p>
-                    <p className="text-muted-foreground text-sm">
-                      {(uploadedFile.size / 1024 / 1024).toFixed(2)} MB
-                    </p>
-                    <p className="text-accent text-sm mt-2">Click to change file</p>
-                  </div>
-                ) : (
-                  <div className="text-center">
-                    <Upload className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-                    <p className="text-foreground font-medium mb-1">
-                      Drop your file here or click to browse
-                    </p>
-                    <p className="text-muted-foreground text-sm">
-                      Supports TXT, PDF, DOC, DOCX (max 10MB)
-                    </p>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Text Input Section */}
-          <Card className="bg-card border-border">
-            <CardHeader>
-              <CardTitle className="text-card-foreground flex items-center gap-2">
-                <FileText className="h-5 w-5 text-accent" />
-                Or Write Text
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Textarea
-                placeholder="Paste or type your content here..."
-                value={textInput}
-                onChange={(e) => setTextInput(e.target.value)}
-                className="h-40 sm:h-44 md:h-48 bg-input border-border text-foreground placeholder:text-muted-foreground resize-none"
-              />
-              <p className="text-muted-foreground text-sm mt-2">
-                {textInput.length} characters
-              </p>
-            </CardContent>
-          </Card>
+  {/* Upload + Text Input */}
+  <div className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+    {/* Upload */}
+    <Card className="bg-[#1e1e2e] border border-[#313244] shadow-none">
+      <CardHeader>
+        <CardTitle className="text-xl flex items-center gap-2 text-[#cdd6f4]">
+          <Upload className="h-5 w-5 text-[#89b4fa]" />
+          Upload Document
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div
+          onDragOver={handleDragOver}
+          onDrop={handleDrop}
+          onClick={() => fileInputRef.current?.click()}
+          className="border border-dashed border-[#313244] rounded-md p-6 h-48 cursor-pointer text-center flex flex-col justify-center items-center hover:border-[#f5e0dc] transition"
+        >
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".txt,.pdf,.doc,.docx"
+            onChange={handleFileUpload}
+            className="hidden"
+          />
+          {uploadedFile ? (
+            <>
+              <FileText className="h-10 w-10 text-[#cba6f7] mb-2" />
+              <p className="text-[#cdd6f4] max-w-full truncate">{uploadedFile.name}</p>
+              <p className="text-sm">{(uploadedFile.size / 1024 / 1024).toFixed(2)} MB</p>
+              <p className="text-[#89b4fa] text-sm mt-1">Click to change file</p>
+            </>
+          ) : (
+            <>
+              <Upload className="h-10 w-10 text-[#f2cdcd] mb-2" />
+              <p className="text-[#cdd6f4] font-medium">Drop your file here or click to browse</p>
+              <p className="text-sm text-[#f2cdcd]">Supports TXT, PDF, DOC, DOCX (max 10MB)</p>
+            </>
+          )}
         </div>
+      </CardContent>
+    </Card>
 
-        {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center px-2">
-          <Button
-            onClick={handleSummarize}
-            disabled={!hasContent || isProcessing}
-            className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 sm:px-6 md:px-8 py-3 sm:py-4 md:py-6 text-base md:text-lg"
-            size="lg"
-          >
-            <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
-            {isProcessing ? 'Processing...' : 'Generate Summary'}
-          </Button>
+    {/* Text Input */}
+    <Card className="bg-[#1e1e2e] border border-[#313244] shadow-none">
+      <CardHeader>
+        <CardTitle className="text-xl flex items-center gap-2 text-[#cdd6f4]">
+          <FileText className="h-5 w-5 text-[#89b4fa]" />
+          or Write Text
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Textarea
+          placeholder="Paste or type your content here..."
+          value={textInput}
+          onChange={(e) => setTextInput(e.target.value)}
+          className="h-48 bg-[#1e1e2e] border border-[#313244] text-[#cdd6f4] placeholder:text-[#f2cdcd] resize-none rounded-md p-4"
+        />
+        <p className="text-sm text-[#f2cdcd] mt-2">{textInput.length} characters</p>
+      </CardContent>
+    </Card>
+  </div>
 
-          <Button
-            onClick={handleGenerateQuiz}
-            disabled={!hasContent || isProcessing}
-            variant="outline"
-            className="border-border text-foreground hover:bg-accent hover:text-accent-foreground px-4 sm:px-6 md:px-8 py-3 sm:py-4 md:py-6 text-base md:text-lg"
-            size="lg"
-          >
-            <BookOpen className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
-            {isProcessing ? 'Processing...' : 'Create Quiz'}
-          </Button>
-        </div>
+  {/* Buttons */}
+  <div className="flex flex-col sm:flex-row gap-4 items-center justify-center mb-4">
+    <Button
+      onClick={handleSummarize}
+      disabled={!hasContent || isSummarizing}
+      className="bg-[#b4befe] hover:bg-[#cba6f7] text-white px-6 py-3 rounded-md text-lg"
+    >
+      <Sparkles className="h-5 w-5 mr-2" />
+      {isSummarizing ? "Processing..." : "Generate Summary"}
+    </Button>
 
-        {/* Status Message */}
-        {!hasContent && (
-          <div className="text-center mt-6">
-            <p className="text-muted-foreground">
-              Upload a document or enter text to get started
-            </p>
-          </div>
-        )}
-      </div>
+    <Button
+      onClick={handleGenerateQuiz}
+      disabled={!hasContent || isGeneratingQuiz}
+      variant="outline"
+      className="border border-[#313244] text-white hover:bg-[#313244] px-6 py-3 rounded-md text-lg"
+    >
+      <BookOpen className="h-5 w-5 mr-2" />
+      {isGeneratingQuiz ? "Processing..." : "Create Quiz"}
+    </Button>
+  </div>
 
-        <Dialog open={dialogData.open} onOpenChange={(open)=>setDialogData(prev=>({...prev,open}))}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{dialogData.title}</DialogTitle>
-            <DialogDescription>
-              <pre className="whitespace-pre-wrap text-sm mt-2 text-foreground">
-                {dialogData.content}
-              </pre>
-            </DialogDescription>
-          </DialogHeader>
-        </DialogContent>
-      </Dialog>
-      </div>
+  {/* Hint */}
+  {!hasContent && (
+    <p className="text-[#f2cdcd] mt-2 text-sm text-center">
+      Upload a document or enter text to get started
+    </p>
+  )}
+
+  {/* Dialog */}
+  <Dialog open={dialogData.open} onOpenChange={(open) => setDialogData(prev => ({ ...prev, open }))}>
+    <DialogContent className="max-h-[90vh] overflow-y-auto bg-[#1e1e2e] text-[#cdd6f4]">
+      <DialogHeader>
+        <DialogTitle className="text-[#cba6f7]">{dialogData.title}</DialogTitle>
+        <DialogDescription>
+          <pre className="whitespace-pre-wrap text-sm mt-2">
+            {dialogData.content}
+          </pre>
+        </DialogDescription>
+      </DialogHeader>
+    </DialogContent>
+  </Dialog>
+</div>
+
   );
 };
 
