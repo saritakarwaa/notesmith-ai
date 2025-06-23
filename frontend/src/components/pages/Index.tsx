@@ -14,7 +14,6 @@ import { useDispatch } from 'react-redux';
 import { setQuiz, setSummary } from '@/features/notesSlice';
 
 // Types
-
 type QuizQuestion = {
   question: string;
   options: Record<string, string>;
@@ -100,6 +99,7 @@ const NotesmithAI = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dispatch = useDispatch();
   const { toast } = useToast();
+  const [isGeneratingTopicQuiz, setIsGeneratingTopicQuiz] = useState(false);
   const baseUrl = "http://localhost:3000/api";
 
   const validateAndHandleFile = (file: File): boolean => {
@@ -175,6 +175,39 @@ const NotesmithAI = () => {
     }
   };
 
+  const handleGenerateTopicQuiz=async()=>{
+    if(!textInput.trim()) return;
+    setIsGeneratingTopicQuiz(true);
+    try{
+      const response=await fetch(`${baseUrl}/generate-quiz/topic`,{
+        method:"POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: textInput }),
+      })
+      const data=await response.json()
+      console.log(data)
+      console.log("Status:", response.status);
+      if(response.ok && data.quiz){
+        dispatch(setQuiz(data.quiz))
+        setDialogData({
+          open:true,
+          title:"Quiz",
+          content:data.quiz
+        })
+      }
+      else{
+        setDialogData({ open: true, title: "Error", content: data.message });
+        toast({ title: "Topic Quiz Failed", description: data.message || "No quiz returned." });
+      }
+    }
+    catch(error){
+      toast({ title: "Error", description: "Something went wrong." });
+    }
+    finally{
+      setIsGeneratingTopicQuiz(false)
+    }
+  }
+
   return (
     <div className="min-h-screen w-full py-10 px-4 sm:px-6 md:px-8 lg:px-10 flex flex-col items-center bg-[#1e1e2e] text-[#cdd6f4]">
       <div className="text-center mb-8">
@@ -244,8 +277,12 @@ const NotesmithAI = () => {
           <Sparkles className="h-5 w-5 mr-2" /> {isSummarizing ? "Processing..." : "Generate Summary"}
         </Button>
 
-        <Button onClick={handleGenerateQuiz} disabled={!hasContent || isGeneratingQuiz} variant="outline" className="border border-[#313244] text-white hover:bg-[#313244] px-6 py-3 rounded-md text-lg">
-          <BookOpen className="h-5 w-5 mr-2" /> {isGeneratingQuiz ? "Processing..." : "Create Quiz"}
+        <Button onClick={handleGenerateQuiz} disabled={!hasContent || isGeneratingQuiz} variant="outline" className="bg-[#b4befe] hover:bg-[#cba6f7] text-white px-6 py-3 rounded-md text-lg">
+          <BookOpen className="h-5 w-5 mr-2" /> {isGeneratingQuiz ? "Processing..." : "Generate Quiz"}
+        </Button>
+
+        <Button onClick={handleGenerateTopicQuiz} disabled={!textInput.trim() || isGeneratingTopicQuiz} className="bg-[#b4befe] hover:bg-[#cba6f7] text-white px-6 py-3 rounded-md text-lg">
+          <Sparkles className="h-5 w-5 mr-2" /> {isGeneratingTopicQuiz ? "Processing..." : "Generate Topic Quiz"}
         </Button>
       </div>
 
