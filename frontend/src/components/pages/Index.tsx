@@ -14,6 +14,19 @@ import {
 import { useDispatch } from 'react-redux';
 import { setQuiz, setSummary } from '@/features/notesSlice';
 
+type Quiz = {
+  questions: {
+    question: string;
+    options: {
+      a: string;
+      b: string;
+      c: string;
+      d: string;
+    };
+    correctAnswer: string;
+  }[];
+};
+
 const NotesmithAI = () => {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [textInput, setTextInput] = useState('');
@@ -21,7 +34,7 @@ const NotesmithAI = () => {
   const [isGeneratingQuiz, setIsGeneratingQuiz] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [dialogData, setDialogData] = useState<{
-          open: boolean;title: string;content: string;}>({
+          open: boolean;title: string;content: string|Quiz;}>({
           open: false,title: '',content: '',});
   const { toast } = useToast();
   const dispatch=useDispatch()
@@ -261,11 +274,33 @@ const NotesmithAI = () => {
     <DialogContent className="max-h-[90vh] overflow-y-auto bg-[#1e1e2e] text-[#cdd6f4]">
       <DialogHeader>
         <DialogTitle className="text-[#cba6f7]">{dialogData.title}</DialogTitle>
-        <DialogDescription>
-          <pre className="whitespace-pre-wrap text-sm mt-2">
-            {dialogData.content}
-          </pre>
-        </DialogDescription>
+        <DialogDescription className="mt-4 space-y-4">
+  {typeof dialogData.content === 'string' ? (
+    <p>{dialogData.content}</p>
+  ) : 'questions' in dialogData.content ? (
+    <div className="space-y-4">
+      {dialogData.content.questions.map((q, index) => (
+        <div key={index}>
+          <p className="font-medium text-[#f5e0dc]">
+            {index + 1}. {q.question}
+          </p>
+          <ul className="list-disc pl-6 text-sm text-[#f2cdcd]">
+            {Object.entries(q.options).map(([key, option]) => (
+              <li key={key}>
+                <span className={q.correctAnswer === key ? "font-bold text-[#b4befe]" : ""}>
+                  ({key}) {option}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
+  ) : (
+    <p className="text-red-500">Unsupported format</p>
+  )}
+</DialogDescription>
+
       </DialogHeader>
     </DialogContent>
   </Dialog>
