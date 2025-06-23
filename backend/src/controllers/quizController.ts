@@ -60,8 +60,8 @@ ${text}`;
     if (!quiz) {
       return res.status(502).json({ message: "No quiz generated" });
     }
-
-    res.json({ quiz });
+    const quizJSON=JSON.parse(quiz)
+    res.json({ quiz:quizJSON });
   } catch (error) {
     console.error("Quiz generation error:", error);
     res.status(500).json({ error: (error as Error).message });
