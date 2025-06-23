@@ -18,7 +18,8 @@ export async function generateQuiz(req: Request, res: Response) {
 Each question should:
 - Be clear and concise
 - Have 4 options (a, b, c, d)
-- Include the correct answer in the format "correctAnswer": "a"
+- Include the correct answer in the format "correctAnswer": "a
+- Please return the output as raw JSON without wrapping it in triple backticks or markdown.
 - Return only the output in JSON format like this:
 {
   "questions": [
@@ -60,7 +61,17 @@ ${text}`;
     if (!quiz) {
       return res.status(502).json({ message: "No quiz generated" });
     }
-    const quizJSON=JSON.parse(quiz)
+    const cleanedQuiz = quiz
+      .replace(/^\s*```(?:json)?\s*/, '')  
+      .replace(/\s*```\s*$/, '')          
+      .trim();
+    let quizJSON;
+    try {
+      quizJSON = JSON.parse(cleanedQuiz);
+    } catch (error) {
+      console.error("Failed to parse quiz JSON:", cleanedQuiz);
+      return res.status(500).json({ message: "Quiz JSON is invalid", error: (error as Error).message });
+    }
     res.json({ quiz:quizJSON });
   } catch (error) {
     console.error("Quiz generation error:", error);
