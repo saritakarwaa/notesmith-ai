@@ -78,3 +78,68 @@ ${text}`;
     res.status(500).json({ error: (error as Error).message });
   }
 }
+
+
+export async function generateTopicQuiz(req:Request,res:Response) {
+  try{
+    const topic=req.body.text
+    if (!topic || typeof topic !== "string") {
+      return res.status(400).json({ message: "No topic provided" });
+    }
+    const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+    if (!GEMINI_API_KEY) {
+      return res.status(500).json({ message: "Missing Google Gemini API Key" });
+    }
+    const prompt = `Generate 10 multiple choice questions on the topic "${topic}".
+      Each question should:
+      - Be clear and concise
+      - Have 4 options (a, b, c, d)
+      - Include the correct answer in the format "correctAnswer": "a"
+      - Return the result in pure JSON only in this format:
+      {
+        "questions": [
+          {
+            "question": "Example?",
+            "options": {
+              "a": "Option 1",
+              "b": "Option 2",
+              "c": "Option 3",
+              "d": "Option 4"
+            },
+            "correctAnswer": "b"
+          }
+        ]
+      }`;
+      const response = await axios.post(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
+            {
+              contents: [
+                {
+                  role: "user",
+                  parts: [{ text: prompt }],
+                },
+              ],
+            },
+            {
+              headers: { "Content-Type": "application/json" },
+            }
+          );
+
+      const quiz=response.data.candidates?.[0]?.content?.parts?.[0]?.text
+      if (!quiz) {
+        return res.status(502).json({ message: "No quiz generated" });
+      }
+      const cleaned = quiz.trim().replace(/^```(?:json)?\s*|\s*```$/g, '');
+      let quizJSON;
+      try {
+        quizJSON = JSON.parse(cleaned);
+      } catch (err) {
+        return res.status(500).json({ message: "Invalid JSON", error: (err as Error).message });
+      }
+
+      res.json({ quiz: quizJSON });
+  }
+  catch(err){
+    res.status(500).json({ message: "Server Error", error: (err as Error).message });
+  }
+}
