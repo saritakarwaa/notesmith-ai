@@ -11,8 +11,11 @@ const NotesmithAI: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
   const [text, setText] = useState("");
   const [dialogData, setDialogData] = useState<DialogData>({ open: false, title: "", content: "" });
+  const [summarizeLoading, setSummarizeLoading] = useState(false);
+  const [quizLoading, setQuizLoading] = useState(false);
+  const [topicLoading, setTopicLoading] = useState(false);
 
-  const { loading, summarize, generateQuiz, generateTopicQuiz } = useNotesmithApi();
+  const { summarize, generateQuiz, generateTopicQuiz } = useNotesmithApi();
 
   const buildFormData = (): FormData => {
     const fd = new FormData();
@@ -25,20 +28,26 @@ const NotesmithAI: React.FC = () => {
 
   const handleSummarize = async () => {
     if (!hasContent) return;
+      setSummarizeLoading(true);
     const summary=await summarize(buildFormData());
     if(summary) setDialogData({ open: true, title: "Summary", content: summary});
+    setSummarizeLoading(false)
   };
 
   const handleQuiz = async () => {
     if (!hasContent) return;
+      setQuizLoading(true);
     const quiz=await generateQuiz(buildFormData());
     if(quiz) setDialogData({ open: true, title: "Quiz", content: quiz });
+    setQuizLoading(false)
   };
 
   const handleTopicQuiz = async () => {
     if (!text.trim()) return;
+    setTopicLoading(true)
     const quiz=await generateTopicQuiz(text);
     if(quiz) setDialogData({ open: true, title: "Quiz", content:quiz });
+    setTopicLoading(false)
   };
 
   return (
@@ -59,12 +68,13 @@ const NotesmithAI: React.FC = () => {
 
       <ActionButtons
         disabled={!hasContent}
-        loading={loading}
+        summarizeLoading={summarizeLoading}
+        quizLoading={quizLoading}
+        topicLoading={topicLoading}
         onSummarize={handleSummarize}
         onQuiz={handleQuiz}
         onTopicQuiz={handleTopicQuiz}
         disableTopicQuiz={!text.trim()}
-        topicLoading={loading}
       />
 
       {!hasContent && <p className="text-[#f2cdcd] mt-2 text-sm text-center">Upload a document or enter text to get started</p>}
