@@ -3,7 +3,11 @@ import { useDispatch } from "react-redux";
 import { setQuiz, setSummary } from "@/features/notesSlice";
 import { useToast } from "@/hooks/use-toast";
 
-const baseUrl = "http://localhost:3000/api";
+// const baseUrl = "http://localhost:3000/api";
+const baseUrl =
+    import.meta.env.MODE === "development"
+      ? "http://localhost:3000/api"
+      : "https://notesmith-ai.onrender.com"
 
 type UseApiReturn = {
   loading: boolean;

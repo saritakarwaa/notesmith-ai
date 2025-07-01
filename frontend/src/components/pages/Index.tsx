@@ -7,6 +7,7 @@ import DialogViewer from "../DialogViewer";
 import type { DialogData } from "@/types";
 import { useNotesmithApi } from "@/hooks/useApi";
 
+
 const NotesmithAI: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
   const [text, setText] = useState("");
@@ -14,6 +15,7 @@ const NotesmithAI: React.FC = () => {
   const [summarizeLoading, setSummarizeLoading] = useState(false);
   const [quizLoading, setQuizLoading] = useState(false);
   const [topicLoading, setTopicLoading] = useState(false);
+
 
   const { summarize, generateQuiz, generateTopicQuiz } = useNotesmithApi();
 
@@ -23,6 +25,8 @@ const NotesmithAI: React.FC = () => {
     else fd.append("text", text);
     return fd;
   };
+
+ 
 
   const hasContent = file || text.trim().length > 0;
 
