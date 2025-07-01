@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 const baseUrl =
     import.meta.env.MODE === "development"
       ? "http://localhost:3000/api"
-      : "https://notesmith-ai.onrender.com"
+      : "https://notesmith-ai.onrender.com/api"
 
 type UseApiReturn = {
   loading: boolean;
