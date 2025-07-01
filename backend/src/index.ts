@@ -8,7 +8,7 @@ import dotenv from 'dotenv'
 const app = express();
 dotenv.config()
 
-const allowedOrigins = ["http://localhost:5173", ];
+const allowedOrigins = ["http://localhost:5173","https://notesmith-ai.vercel.app/" ];
 app.use(cors({
   origin: function (origin, callback) {
     if (!origin || allowedOrigins.includes(origin)) {
