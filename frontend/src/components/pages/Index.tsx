@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { FileText } from "lucide-react";
 import FileUploader from "@/components/FileUploader";
 import TextInputArea from "@/components/TextInput";
@@ -6,6 +6,7 @@ import ActionButtons from "@/components/ActionButtons";
 import DialogViewer from "../DialogViewer";
 import type { DialogData } from "@/types";
 import { useNotesmithApi } from "@/hooks/useApi";
+import { clearFile, loadFile, loadText, saveFile, saveText } from "../utils/storage";
 
 
 const NotesmithAI: React.FC = () => {
@@ -16,6 +17,21 @@ const NotesmithAI: React.FC = () => {
   const [quizLoading, setQuizLoading] = useState(false);
   const [topicLoading, setTopicLoading] = useState(false);
 
+  useEffect(()=>{
+    loadText().then(setText)
+  },[])
+  useEffect(()=>{
+    saveText(text)
+  },[text])
+  useEffect(()=>{
+    loadFile().then((f)=>{
+      if(f) setFile(f)
+    })
+  },[])
+  useEffect(()=>{
+    if(file) saveFile(file)
+    else clearFile()
+  },[file])
 
   const { summarize, generateQuiz, generateTopicQuiz } = useNotesmithApi();
 
