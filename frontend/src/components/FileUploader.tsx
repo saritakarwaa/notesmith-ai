@@ -2,6 +2,7 @@ import React, { useRef } from "react";
 import { Upload, FileText } from "lucide-react";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { validateFile } from "./utils/file";
+import { clearFile } from "./utils/storage";
 
 interface Props {
   file: File | null;
@@ -45,6 +46,16 @@ const FileUploader: React.FC<Props> = ({ file, setFile }) => {
               <p className="text-[#cdd6f4] max-w-full truncate">{file.name}</p>
               <p className="text-sm">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
               <p className="text-[#89b4fa] text-sm mt-1">Click to change file</p>
+               <button
+              onClick={async (e) => {
+                e.stopPropagation(); // prevents re-opening file picker
+                await clearFile();
+                setFile(null);
+              }}
+                className="mt-1 px-1.5 py-0.5 text-[11px] text-white bg-red-500 rounded hover:bg-red-600"
+              >
+                Remove File
+              </button>
             </>
           ) : (
             <>

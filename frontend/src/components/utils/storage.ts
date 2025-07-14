@@ -1,4 +1,4 @@
-import {get,set} from "idb-keyval"
+import {del, get,set} from "idb-keyval"
 
 export const saveText=async(text:string)=>{
     await set("notesmith_text",text)
@@ -19,5 +19,5 @@ export const loadFile=async():Promise<File|null>=>{
 }
 
 export const clearFile=async()=>{
-    await set("notesmith_file",null)
+    await del("notesmith_file")
 }
